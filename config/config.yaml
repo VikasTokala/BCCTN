@@ -25,7 +25,7 @@ model:
   snr_weight: 1
   stoi_weight: 10
 training:
-  accelerator: cuda
+  accelerator: cpu
   batch_size: 32
   learning_rate: 0.0001
   n_epochs: 40
