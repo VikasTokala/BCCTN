@@ -1,0 +1,17 @@
+model:
+  binaural: true
+  attention: true
+
+  STOI_weight: 1
+ 
+  
+  rtf_weight: 0
+  snr_weight: 1
+  ild_weight: 1
+  kurt_weight: 0
+  ipd_weight: 1
+  stoi_weight: 10
+  binaural_avg_mode: time # time | freq | null
+
+  use_clstm: True
+  use_cbn: True

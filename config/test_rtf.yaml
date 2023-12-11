@@ -1,0 +1,7 @@
+test_rtf:
+  batch_size: 3
+  n_workers: 1
+  checkpoint_path: /Users/vtokala/Documents/Research/di_nn/DCNN/checkpoints/weights-epoch=74-validation_loss=-19.05.ckpt
+  noisy_dir: /Users/vtokala/Documents/Research/di_nn/DCNN/Noisy_binaural_signals
+  target_dir:  /Users/vtokala/Documents/Research/di_nn/DCNN/Clean_binaural_signals
+  output_dir: /Users/vtokala/Documents/Research/di_nn/DCNN/Enhanced_Signals

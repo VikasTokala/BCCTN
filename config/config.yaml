@@ -1,0 +1,35 @@
+dataset:
+  noisy_test_dataset_dir: /Users/vtokala/Documents/Research/di_nn/Dataset/noisy_testset_1f
+  noisy_training_dataset_dir: /Users/vtokala/Documents/Research/di_nn/Dataset/noisy_trainset_1f
+  noisy_validation_dataset_dir: /Users/vtokala/Documents/Research/di_nn/Dataset/noisy_valset_1f
+  target_test_dataset_dir: /Users/vtokala/Documents/Research/di_nn/Dataset/clean_testset_1f
+  target_training_dataset_dir: /Users/vtokala/Documents/Research/di_nn/Dataset/clean_trainset_1f
+  target_validation_dataset_dir: /Users/vtokala/Documents/Research/di_nn/Dataset/clean_valset_1f
+defaults:
+- model
+- training
+- dataset: speech_dataset
+model:
+  attention: true
+  avg_mode: time
+  comp_loss_weight: 0
+  ild_weight: 1
+  ipd_weight: 10
+  kurt_weight: 0
+  msc_weight: 0
+  mse_weight: 0
+  rtf_weight: 0
+  sdr_weight: 0
+  si_sdr_weight: 0
+  si_snr_weight: 0
+  snr_weight: 1
+  stoi_weight: 10
+training:
+  accelerator: cuda
+  batch_size: 32
+  learning_rate: 0.0001
+  n_epochs: 40
+  n_workers: 4
+  pin_memory: true
+  strategy: ddp
+  train_checkpoint_path: null
