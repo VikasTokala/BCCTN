@@ -163,3 +163,4 @@ vad_test.py
 # *.mat
 # MatFiles/
 checkpoints/
+outputs/
