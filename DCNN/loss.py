@@ -1,131 +1,80 @@
 import torch
 import torch.nn as nn
 import torch.functional as F
-from torchmetrics import SignalNoiseRatio, SignalDistortionRatio, ScaleInvariantSignalDistortionRatio
 from torch.nn import Module
 from DCNN.feature_extractors import Stft, IStft
 from torch_stoi import NegSTOILoss
-import matplotlib.pyplot as plt
 
-# from DCNN.utils.spectral_kurtosis import Spectral_Kurtosis
+
+
 
 EPS = 1e-6
 
 
 class BinauralLoss(Module):
     def __init__(self, win_len=400,
-                 win_inc=100, fft_len=512, sr=16000, rtf_weight=0.3, snr_weight=0.7,
-                 ild_weight=0.1, ipd_weight=1, stoi_weight=0, avg_mode="freq", kurt_weight=0.1, mse_weight=0, sdr_weight=0,
-                 si_sdr_weight=0, si_snr_weight=1, comp_loss_weight=0, msc_weight=0):
+                 win_inc=100, fft_len=512, sr=16000,
+                 ild_weight=0.1, ipd_weight=1, stoi_weight=0, 
+                  snr_loss_weight=1):
 
         super().__init__()
         self.stft = Stft(fft_len, win_inc, win_len)
         self.istft = IStft(fft_len, win_inc, win_len)
         self.stoi_loss = NegSTOILoss(sample_rate=sr)
-        self.rtf_weight = rtf_weight
-        self.snr_weight = snr_weight
+       
         self.ild_weight = ild_weight
         self.ipd_weight = ipd_weight
         self.stoi_weight = stoi_weight
-        self.avg_mode = avg_mode
-        self.mse_weight = mse_weight
-        self.si_sdr_weight = si_sdr_weight
-        self.si_snr_weight = si_snr_weight
-        # self.dBA = dBA_Torcolli(fs=16000)
-        # self.Kurtosis = Kurtosis()
-        # self.Spec_Kurt = Spectral_Kurtosis(fs=16000)
-        self.kurt_weight = kurt_weight
-        self.sdr_weight = sdr_weight
-        self.comp_loss_weight = comp_loss_weight
-        
-        self.snr = SignalNoiseRatio()
-        self.sdr = SignalDistortionRatio()
-        self.mse = nn.MSELoss(reduction='mean')
-        # self.mse = complex_mse_loss()
-        self.sisdr = ScaleInvariantSignalDistortionRatio()
-        self.msc_weight = msc_weight
+        self.snr_loss_weight = snr_loss_weight
+
         
     def forward(self, model_output, targets):
         target_stft_l = self.stft(targets[:, 0])
         target_stft_r = self.stft(targets[:, 1])
         
-        # model_target_stft_l = self.stft(model_target[:, 0])
-        # model_target_stft_r = self.stft(model_target[:, 1])
 
         output_stft_l = self.stft(model_output[:, 0])
         output_stft_r = self.stft(model_output[:, 1])
 
-        # sk = self.Spec_Kurt(target_stft_l,output_stft_l)
-        # breakpoint()
 
         loss = 0
-        if self.si_snr_weight > 0:
+        if self.snr_loss_weight > 0:
             
-            sisnr_l = si_snr(model_output[:, 0], targets[:, 0])
-            sisnr_r = si_snr(model_output[:, 1], targets[:, 1])
+            snr_l = snr_loss(model_output[:, 0], targets[:, 0])
+            snr_r = snr_loss(model_output[:, 1], targets[:, 1])
             # sisnr_l = self.snr(model_output[:, 0], targets[:, 0])
             # sisnr_r = self.sisnr(model_output[:, 1], targets[:, 1])
             # model_output_cat = torch.cat((model_output[:,0],model_output[:,1]),dim=1)
             # target_output_cat = torch.cat((targets[:,0],targets[:,1]),dim=1)
             # snr_cat = self.snr(model_output_cat,target_output_cat) 
             # breakpoint()
-            sisnr_loss = - (sisnr_l + sisnr_r)/2
-            # snr_loss = - snr_cat
-            bin_sisnr_loss = self.si_snr_weight*sisnr_loss
+            snr_loss_lr = - (snr_l + snr_r)/2
+            # snr_loss_lr = - snr_cat
+            bin_snr_loss = self.snr_loss_weight*snr_loss_lr
             
-            print('\n SI-SNR Loss = ', bin_sisnr_loss)
-            loss += bin_sisnr_loss
-        
-        if self.snr_weight > 0:
-            
-            # snr_l = si_snr(model_output[:, 0], targets[:, 0])
-            # snr_r = si_snr(model_output[:, 1], targets[:, 1])
-            snr_l = self.snr(model_output[:, 0], targets[:, 0])
-            snr_r = self.snr(model_output[:, 1], targets[:, 1])
-            # model_output_cat = torch.cat((model_output[:,0],model_output[:,1]),dim=1)
-            # target_output_cat = torch.cat((targets[:,0],targets[:,1]),dim=1)
-            # snr_cat = self.snr(model_output_cat,target_output_cat) 
-            # breakpoint()
-            snr_loss = - (snr_l + snr_r)/2
-            # snr_loss = - snr_cat
-            bin_snr_loss = self.snr_weight*snr_loss
-            bin_snr_loss
             print('\n SNR Loss = ', bin_snr_loss)
             loss += bin_snr_loss
         
-        if self.sdr_weight > 0:
+        # if self.snr_weight > 0:
             
-            # snr_l = si_snr(model_output[:, 0], targets[:, 0])
-            # snr_r = si_snr(model_output[:, 1], targets[:, 1])
-            sdr_l = self.sdr(model_output[:, 0], targets[:, 0])
-            sdr_r = self.sdr(model_output[:, 1], targets[:, 1])
-            # model_output_cat = torch.cat((model_output[:,0],model_output[:,1]),dim=1)
-            # target_output_cat = torch.cat((targets[:,0],targets[:,1]),dim=1)
-            # snr_cat = self.snr(model_output_cat,target_output_cat) 
-            # breakpoint()
-            sdr_loss = - (sdr_l + sdr_r)/2
-            # snr_loss = - snr_cat
-            bin_sdr_loss = self.sdr_weight*sdr_loss
-            
-            print('\n SDR Loss = ', bin_sdr_loss)
-            loss += bin_sdr_loss
+        #     # snr_l = snr_loss(model_output[:, 0], targets[:, 0])
+        #     # snr_r = snr_loss(model_output[:, 1], targets[:, 1])
+        #     snr_l = self.snr(model_output[:, 0], targets[:, 0])
+        #     snr_r = self.snr(model_output[:, 1], targets[:, 1])
+        #     # model_output_cat = torch.cat((model_output[:,0],model_output[:,1]),dim=1)
+        #     # target_output_cat = torch.cat((targets[:,0],targets[:,1]),dim=1)
+        #     # snr_cat = self.snr(model_output_cat,target_output_cat) 
+        #     # breakpoint()
+        #     snr_loss = - (snr_l + snr_r)/2
+        #     # snr_loss = - snr_cat
+        #     bin_snr_loss = self.snr_weight*snr_loss
+        #     bin_snr_loss
+        #     print('\n SNR Loss = ', bin_snr_loss)
+        #     loss += bin_snr_loss
         
-        if self.si_sdr_weight > 0:
-            
-            # snr_l = si_snr(model_output[:, 0], targets[:, 0])
-            # snr_r = si_snr(model_output[:, 1], targets[:, 1])
-            sisdr_l = self.sisdr(model_output[:, 0], targets[:, 0])
-            sisdr_r = self.sisdr(model_output[:, 1], targets[:, 1])
-            # model_output_cat = torch.cat((model_output[:,0],model_output[:,1]),dim=1)
-            # target_output_cat = torch.cat((targets[:,0],targets[:,1]),dim=1)
-            # snr_cat = self.snr(model_output_cat,target_output_cat) 
-            # breakpoint()
-            sisdr_loss = - (sisdr_l + sisdr_r)/2
-            # snr_loss = - snr_cat
-            bin_sisdr_loss = self.si_sdr_weight*sisdr_loss
-            
-            print('\n SI-SDR Loss = ', bin_sisdr_loss)
-            loss += bin_sisdr_loss
+
+        
+    
 
         if self.stoi_weight > 0:
             stoi_l = self.stoi_loss(model_output[:, 0], targets[:, 0])
@@ -139,7 +88,7 @@ class BinauralLoss(Module):
 
         if self.ild_weight > 0:
             ild_loss = ild_loss_db(target_stft_l.abs(), target_stft_r.abs(),
-                                   output_stft_l.abs(), output_stft_r.abs(), avg_mode=self.avg_mode)
+                                   output_stft_l.abs(), output_stft_r.abs())
             # ild_loss = ild_loss_db(target_stft_l.abs(), target_stft_r.abs(),
             #                        model_target_stft_l.abs(), model_target_stft_r.abs(), avg_mode=self.avg_mode)
             bin_ild_loss = self.ild_weight*ild_loss
@@ -149,7 +98,7 @@ class BinauralLoss(Module):
 
         # if self.ipd_weight > 0:
             ipd_loss = ipd_loss_rads(target_stft_l, target_stft_r,
-                                     output_stft_l, output_stft_r, avg_mode=self.avg_mode)
+                                     output_stft_l, output_stft_r)
             # ipd_loss = ipd_loss_rads(target_stft_l, target_stft_r,
             #                          model_target_stft_l, model_target_stft_r, avg_mode=self.avg_mode)
             bin_ipd_loss = self.ipd_weight*ipd_loss
@@ -157,69 +106,15 @@ class BinauralLoss(Module):
             print('\n IPD Loss = ', bin_ipd_loss)
             loss += bin_ipd_loss
         
-        if self.mse_weight > 0:
-            # b, d, t = model_output.shape
-            # targets[:, 0, :] = 0
-            # targets[:, d // 2, :] = 0
-            # bin_mse_loss = (self.mse(output_stft_l, target_stft_l) + self.mse(output_stft_r,target_stft_r))/2.0 
-            bin_mse_loss = (complex_mse_loss(output_stft_l, target_stft_l) + complex_mse_loss(output_stft_r,target_stft_r))/2.0 
-            bin_mse_loss = bin_mse_loss.abs()
-            print('\n MSE Loss = ', bin_mse_loss)
-            loss += bin_mse_loss
-            
-        if self.msc_weight > 0:
-                # Calculate the Cross-Power Spectral Density (CPSD)
-
-            
-            bin_msc_loss = msc_loss(target_stft_l, target_stft_r,
-                             output_stft_l, output_stft_r)
-            # breakpoint()
-            bin_msc_loss = bin_msc_loss*self.msc_weight
-            print('\n MSC Loss = ', bin_msc_loss)
-            
-            
-            
-            loss += bin_msc_loss
-            
-        
-        
-        
-        
-        
-        
-        
-        
-        if self.comp_loss_weight > 0:
-            # b, d, t = model_output.shape
-            # targets[:, 0, :] = 0
-            # targets[:, d // 2, :] = 0
-            # bin_comp_loss = comp_loss_old(target_stft_l, target_stft_r,
-            #                          output_stft_l, output_stft_r,c=0.3) 
-            comp_loss_l = self.mse(target_stft_l.abs(),output_stft_l.abs())
-            comp_loss_r = self.mse(target_stft_r.abs(),output_stft_r.abs())
-            bin_comp_loss = (comp_loss_l + comp_loss_r)/2 * self.comp_loss_weight
-            print('\n Magnitude MSE Loss = ', bin_comp_loss)
-            loss += bin_comp_loss
-        
-        if self.rtf_weight > 0:
-            target_rtf_td_full = self.istft(
-                target_stft_l/(target_stft_r + EPS))
-            output_rtf_td_full = self.istft(
-                output_stft_l/(output_stft_r + EPS))
-
-            target_rtf_td = target_rtf_td_full[:, 0:2047]
-            output_rtf_td = output_rtf_td_full[:, 0:2047]
-
-            epsilon = target_rtf_td - ((target_rtf_td@(torch.transpose(output_rtf_td, 0, 1)))/(
-                output_rtf_td@torch.transpose(output_rtf_td, 0, 1)))@output_rtf_td
-            npm_error = torch.norm((epsilon/torch.max(epsilon))) / \
-                torch.norm((target_rtf_td)/torch.max(target_rtf_td))
-
-            loss += self.rtf_weight*npm_error
-
         return loss
-
-
+        
+        
+        
+        
+        
+        
+        
+        
 class Loss(Module):
     def __init__(self, loss_mode="SI-SNR", win_len=400,
                  win_inc=100,
@@ -244,8 +139,8 @@ class Loss(Module):
             return F.mse_loss(model_output, targets, reduction="mean") * d
 
         elif self.loss_mode == "SI-SNR":
-            # return -torch.mean(si_snr(model_output, targets))
-            return -(si_snr(model_output, targets))
+            # return -torch.mean(snr_loss(model_output, targets))
+            return -(snr_loss(model_output, targets))
 
         elif self.loss_mode == "MAE":
             gth_spec, gth_phase = self.stft(targets)
@@ -254,7 +149,7 @@ class Loss(Module):
 
         elif self.loss_mode == "STOI-SNR":
             loss_batch = self.stoi_loss(model_output, targets)
-            return -(self.SNR_weight*si_snr(model_output, targets)) + self.STOI_weight*loss_batch.mean()
+            return -(self.SNR_weight*snr_loss(model_output, targets)) + self.STOI_weight*loss_batch.mean()
 
 
 def l2_norm(s1, s2):
@@ -262,10 +157,8 @@ def l2_norm(s1, s2):
     return norm
 
 
-def si_snr(s1, s2, eps=EPS, reduce_mean=True):
-    s1_s2_norm = l2_norm(s1, s2)
-    s2_s2_norm = l2_norm(s2, s2)
-    s_target = s1_s2_norm / (s2_s2_norm + eps) * s2
+def snr_loss(s1, s_target, eps=EPS, reduce_mean=True):
+    
     e_nosie = s1 - s_target
     target_norm = l2_norm(s_target, s_target)
     noise_norm = l2_norm(e_nosie, e_nosie)
@@ -277,7 +170,7 @@ def si_snr(s1, s2, eps=EPS, reduce_mean=True):
     return snr_norm
 
 
-def ild_db(s1, s2, eps=EPS, avg_mode=None):
+def ild_db(s1, s2, eps=EPS):
     # s1 = _avg_signal(s1, avg_mode)
     # s2 = _avg_signal(s2, avg_mode)
 
@@ -292,8 +185,8 @@ def ild_loss_db(target_stft_l, target_stft_r,
                 output_stft_l, output_stft_r, avg_mode=None):
     # amptodB = T.AmplitudeToDB(stype='amplitude')
 
-    target_ild = ild_db(target_stft_l.abs(), target_stft_r.abs(), avg_mode=avg_mode)
-    output_ild = ild_db(output_stft_l.abs(), output_stft_r.abs(), avg_mode=avg_mode)
+    target_ild = ild_db(target_stft_l.abs(), target_stft_r.abs())
+    output_ild = ild_db(output_stft_l.abs(), output_stft_r.abs())
     mask = speechMask(target_stft_l,target_stft_r,threshold=20)
     
     ild_loss = (target_ild - output_ild).abs()

@@ -11,19 +11,11 @@ defaults:
 - dataset: speech_dataset
 model:
   attention: true
-  avg_mode: time
-  comp_loss_weight: 0
   ild_weight: 1
   ipd_weight: 10
-  kurt_weight: 0
-  msc_weight: 0
-  mse_weight: 0
-  rtf_weight: 0
-  sdr_weight: 0
-  si_sdr_weight: 0
-  si_snr_weight: 0
-  snr_weight: 1
+  snr_loss_weight: 1
   stoi_weight: 10
+
 training:
   accelerator: cpu
   batch_size: 32
