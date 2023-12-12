@@ -42,67 +42,36 @@ class BinauralLoss(Module):
             
             snr_l = snr_loss(model_output[:, 0], targets[:, 0])
             snr_r = snr_loss(model_output[:, 1], targets[:, 1])
-            # sisnr_l = self.snr(model_output[:, 0], targets[:, 0])
-            # sisnr_r = self.sisnr(model_output[:, 1], targets[:, 1])
-            # model_output_cat = torch.cat((model_output[:,0],model_output[:,1]),dim=1)
-            # target_output_cat = torch.cat((targets[:,0],targets[:,1]),dim=1)
-            # snr_cat = self.snr(model_output_cat,target_output_cat) 
-            # breakpoint()
+          
             snr_loss_lr = - (snr_l + snr_r)/2
-            # snr_loss_lr = - snr_cat
+           
             bin_snr_loss = self.snr_loss_weight*snr_loss_lr
             
             print('\n SNR Loss = ', bin_snr_loss)
             loss += bin_snr_loss
         
-        # if self.snr_weight > 0:
-            
-        #     # snr_l = snr_loss(model_output[:, 0], targets[:, 0])
-        #     # snr_r = snr_loss(model_output[:, 1], targets[:, 1])
-        #     snr_l = self.snr(model_output[:, 0], targets[:, 0])
-        #     snr_r = self.snr(model_output[:, 1], targets[:, 1])
-        #     # model_output_cat = torch.cat((model_output[:,0],model_output[:,1]),dim=1)
-        #     # target_output_cat = torch.cat((targets[:,0],targets[:,1]),dim=1)
-        #     # snr_cat = self.snr(model_output_cat,target_output_cat) 
-        #     # breakpoint()
-        #     snr_loss = - (snr_l + snr_r)/2
-        #     # snr_loss = - snr_cat
-        #     bin_snr_loss = self.snr_weight*snr_loss
-        #     bin_snr_loss
-        #     print('\n SNR Loss = ', bin_snr_loss)
-        #     loss += bin_snr_loss
-        
-
-        
-    
-
         if self.stoi_weight > 0:
             stoi_l = self.stoi_loss(model_output[:, 0], targets[:, 0])
             stoi_r = self.stoi_loss(model_output[:, 1], targets[:, 1])
 
             stoi_loss = (stoi_l+stoi_r)/2
             bin_stoi_loss = self.stoi_weight*stoi_loss.mean()
-            # bin_stoi_loss.detach()
             print('\n STOI Loss = ', bin_stoi_loss)
             loss += bin_stoi_loss
 
         if self.ild_weight > 0:
             ild_loss = ild_loss_db(target_stft_l.abs(), target_stft_r.abs(),
                                    output_stft_l.abs(), output_stft_r.abs())
-            # ild_loss = ild_loss_db(target_stft_l.abs(), target_stft_r.abs(),
-            #                        model_target_stft_l.abs(), model_target_stft_r.abs(), avg_mode=self.avg_mode)
+            
             bin_ild_loss = self.ild_weight*ild_loss
-            # bin_ild_loss.detach()
             print('\n ILD Loss = ', bin_ild_loss)
             loss += bin_ild_loss
 
-        # if self.ipd_weight > 0:
+        if self.ipd_weight > 0:
             ipd_loss = ipd_loss_rads(target_stft_l, target_stft_r,
                                      output_stft_l, output_stft_r)
-            # ipd_loss = ipd_loss_rads(target_stft_l, target_stft_r,
-            #                          model_target_stft_l, model_target_stft_r, avg_mode=self.avg_mode)
             bin_ipd_loss = self.ipd_weight*ipd_loss
-            # bin_ild_loss.detach()
+            
             print('\n IPD Loss = ', bin_ipd_loss)
             loss += bin_ipd_loss
         
