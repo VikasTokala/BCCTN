@@ -154,13 +154,13 @@ Clean_binaural_signals/
 # Dataset/
 loss_old.py
 attentions/
-Checkpoints_old/
-checkpoints/
+# Checkpoints_old/
+# checkpoints/
 en_example.wav
 only_speech.wav
 vad_test.py
 *.png
 # *.mat
 # MatFiles/
-checkpoints/
+# checkpoints/
 outputs/
