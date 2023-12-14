@@ -6,10 +6,8 @@ numpy==1.22.3
 omegaconf==2.3.0
 pytorch_lightning==1.9.0
 scipy==1.7.3
-timm==0.6.12
 torch==1.14.0
 torch==1.10.1
 torch_stoi==0.1.2
 torchaudio==0.14.0
 torchaudio==0.10.1
-torchmetrics==0.8.2
