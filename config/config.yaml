@@ -1,8 +1,3 @@
-defaults:
-- model
-- training
-- dataset: speech_dataset
-
 dataset:
   noisy_test_dataset_dir: /Users/vtokala/Documents/Research/di_nn/Dataset/noisy_testset_1f
   noisy_training_dataset_dir: /Users/vtokala/Documents/Research/di_nn/Dataset/noisy_trainset_1f
@@ -10,14 +5,16 @@ dataset:
   target_test_dataset_dir: /Users/vtokala/Documents/Research/di_nn/Dataset/clean_testset_1f
   target_training_dataset_dir: /Users/vtokala/Documents/Research/di_nn/Dataset/clean_trainset_1f
   target_validation_dataset_dir: /Users/vtokala/Documents/Research/di_nn/Dataset/clean_valset_1f
-
+defaults:
+- model
+- training
+- dataset: speech_dataset
 model:
   attention: true
   ild_weight: 1
   ipd_weight: 10
   snr_loss_weight: 1
   stoi_weight: 10
-  
 training:
   accelerator: cpu
   batch_size: 20
