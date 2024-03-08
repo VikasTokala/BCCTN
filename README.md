@@ -7,16 +7,16 @@ title: |
   Binaural Speech Enhancement using Complex Convolutional Networks
 ---
 
-# Introduction {#introduction .unnumbered}
+# Introduction
 
 The software was developed in the frame of WP1 for binaural speech
 enhancement using deep complex-valued convolutional networks
 [@Tokala2024] in acoustic scenarios with a single target speaker and
 isotopic noise of various types.
 
-Github Repository: <https://github.com/SOUNDS-RESEARCH/WP1-BCCTN>
+Github Repository: <https://github.com/SOUNDS-RESEARCH/BCCTN>
 
-# Software Structure {#software-structure .unnumbered}
+# Software Structure 
 
 The code in the repository can be used to train and evaluate the network
 for binaural speech enhancement. The software is written using Python
