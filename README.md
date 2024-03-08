@@ -88,3 +88,7 @@ and loss function files.
     enhance the noisy speech. Spectrogram plots are generated and audio
     files are generated to listen and compare the noisy and enhanced
     speech signals.
+
+
+# Reference: 
+V. Tokala, E. Grinstein, M. Brookes, S. Doclo, J. Jensen, and P. A. Naylor, “Binaural Speech Enhancement using Deep Complex Convolutional Transformer Networks,” in ICASSP, IEEE International Conference on Acoustics, Speech and Signal Processing - Proceedings, Seoul, South Korea, 2024.
