@@ -9,7 +9,7 @@ enhancement using deep complex-valued convolutional networks
 [@Tokala2024] in acoustic scenarios with a single target speaker and
 isotopic noise of various types.
 
-Github Repository: <https://github.com/SOUNDS-RESEARCH/BCCTN>
+Github Repository: <https://github.com/VikasTokala/BCCTN>
 
 # Software Structure 
 
